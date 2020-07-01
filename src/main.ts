@@ -32,6 +32,12 @@ async function run(): Promise<void> {
       }
       prevDate = date
     }
+    await client.issues.createComment({
+      owner: context.repo.owner,
+      repo: context.repo.repo,
+      issue_number: context.issue.number,
+      body: ''
+    })
   } catch (error) {
     core.setFailed(error.message)
   }
