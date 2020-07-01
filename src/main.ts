@@ -36,11 +36,28 @@ async function run(): Promise<void> {
       owner: context.repo.owner,
       repo: context.repo.repo,
       issue_number: context.issue.number,
-      body: ''
+      body: calcRelativeDuration(totalDuration)
     })
   } catch (error) {
     core.setFailed(error.message)
   }
+}
+
+function calcRelativeDuration(duration: number): string {
+  const seconds = duration / 1000
+  if (seconds < 60) {
+    return seconds + ' seconds'
+  }
+  const minutes = seconds / 60
+  if (minutes < 60) {
+    return minutes + ' minutes ' + seconds + ' seconds'
+  }
+  const hours = minutes / 60
+  if (hours < 24) {
+    return hours + ' hours ' + minutes + ' minutes'
+  }
+  const days = hours / 24
+  return days + ' days ' + hours + ' hours'
 }
 
 run()
