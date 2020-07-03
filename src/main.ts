@@ -16,14 +16,15 @@ async function run(): Promise<void> {
     const commits = await client.pulls.listCommits({
       owner: context.repo.owner,
       repo: context.repo.repo,
+      // eslint-disable-next-line @typescript-eslint/camelcase
       pull_number: context.issue.number
     })
-    const dates =
-      commits.data
-        .map(commit => new Date(commit.commit.committer.date).getTime())
+    const dates = commits.data.map(commit =>
+      new Date(commit.commit.committer.date).getTime()
+    )
     let prevDate = null
     let totalDuration = 0
-    for (let date of dates) {
+    for (const date of dates) {
       if (prevDate != null) {
         const duration = date - prevDate
         if (duration < ignoreMinTime) {
@@ -35,6 +36,7 @@ async function run(): Promise<void> {
     await client.issues.createComment({
       owner: context.repo.owner,
       repo: context.repo.repo,
+      // eslint-disable-next-line @typescript-eslint/camelcase
       issue_number: context.issue.number,
       body: calcRelativeDuration(totalDuration)
     })
@@ -46,18 +48,18 @@ async function run(): Promise<void> {
 function calcRelativeDuration(duration: number): string {
   const seconds = duration / 1000
   if (seconds < 60) {
-    return seconds + ' seconds'
+    return `${seconds} seconds`
   }
   const minutes = seconds / 60
   if (minutes < 60) {
-    return minutes + ' minutes ' + seconds + ' seconds'
+    return `${minutes} minutes ${seconds} seconds`
   }
   const hours = minutes / 60
   if (hours < 24) {
-    return hours + ' hours ' + minutes + ' minutes'
+    return `${hours} hours ${minutes} minutes`
   }
   const days = hours / 24
-  return days + ' days ' + hours + ' hours'
+  return `${days} days ${hours} hours`
 }
 
 run()
