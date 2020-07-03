@@ -33,12 +33,38 @@ async function run(): Promise<void> {
       }
       prevDate = date
     }
+    const issues = await client.issues.listComments({
+      owner: context.repo.owner,
+      repo: context.repo.repo,
+      // eslint-disable-next-line @typescript-eslint/camelcase
+      issue_number: context.issue.number
+    })
+    let ownIssue = null
+    for (const issue of issues.data) {
+      if (issue.user.login !== 'github-actions') {
+        continue
+      }
+      if (issue.body.includes('')) {
+        ownIssue = issue
+      }
+    }
+    const duration = calcRelativeDuration(totalDuration)
+    if (ownIssue !== null) {
+      await client.issues.updateComment({
+        owner: context.repo.owner,
+        repo: context.repo.repo,
+        // eslint-disable-next-line @typescript-eslint/camelcase
+        comment_id: ownIssue.id,
+        body: duration
+      })
+      return
+    }
     await client.issues.createComment({
       owner: context.repo.owner,
       repo: context.repo.repo,
       // eslint-disable-next-line @typescript-eslint/camelcase
       issue_number: context.issue.number,
-      body: calcRelativeDuration(totalDuration)
+      body: duration
     })
   } catch (error) {
     core.setFailed(error.message)
