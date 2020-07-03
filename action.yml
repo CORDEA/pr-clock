@@ -1,10 +1,10 @@
-name: 'Your name here'
-description: 'Provide a description here'
-author: 'Your name or organization here'
+name: 'PR Clock'
+description: 'PR Clock'
+author: 'Yoshihiro Tanaka'
 inputs:
-  myInput:              # change this
-    description: 'input description here'
-    default: 'default value if applicable'
+  github-token:
+    description: 'GitHub Token'
+    required: true
 runs:
   using: 'node12'
   main: 'dist/index.js'
