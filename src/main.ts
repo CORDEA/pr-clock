@@ -1,9 +1,7 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
 import {Commit} from './commit'
-
-const ignoreMinTime = 7 * 60 * 60 * 1000
-const title = 'Elapsed time: '
+import {BodyBuilder} from './bodybuilder'
 
 async function run(): Promise<void> {
   try {
@@ -22,27 +20,7 @@ async function run(): Promise<void> {
       pull_number: context.issue.number
     })
     const commits = rawCommits.data.map(commit => new Commit(commit))
-    const waypoints = []
-    let prevDate = null
-    let totalDuration = 0
-    let lastIndex = commits.length - 1
-    for (let i = 0; i <= lastIndex; i++) {
-      const commit = commits[i]
-      if (i === 0 || i === lastIndex) {
-        waypoints.push(commit)
-      }
-      if (prevDate != null) {
-        const duration = commit.createdAt.getTime() - prevDate.getTime()
-        if (duration < ignoreMinTime) {
-          totalDuration = duration
-        } else {
-          if (i !== 0 && i !== lastIndex) {
-            waypoints.push(commit)
-          }
-        }
-      }
-      prevDate = commit.createdAt
-    }
+    const builder = new BodyBuilder(commits)
     const issues = await client.issues.listComments({
       owner: context.repo.owner,
       repo: context.repo.repo,
@@ -54,20 +32,12 @@ async function run(): Promise<void> {
       if (issue.user.login !== 'github-actions') {
         continue
       }
-      if (issue.body.includes(title)) {
+      if (builder.isBody(issue.body)) {
         ownIssue = issue
       }
     }
-    const duration = calcRelativeDuration(totalDuration)
 
-    let body = `${title}${duration}\n\n`
-    for (let i = 0; i < waypoints.length; i++) {
-      const waypoint = waypoints[i]
-      if (i !== 0) {
-        body += ' |\n'
-      }
-      body += `\`${waypoint.sha}\` ${waypoint.createdAt}\n`
-    }
+    const body = builder.build()
     console.log(`Body: ${body}`)
 
     if (ownIssue !== null) {
@@ -92,23 +62,6 @@ async function run(): Promise<void> {
   } catch (error) {
     core.setFailed(error.message)
   }
-}
-
-function calcRelativeDuration(duration: number): string {
-  const seconds = duration / 1000
-  if (seconds < 60) {
-    return `${seconds} seconds`
-  }
-  const minutes = seconds / 60
-  if (minutes < 60) {
-    return `${minutes} minutes ${seconds} seconds`
-  }
-  const hours = minutes / 60
-  if (hours < 24) {
-    return `${hours} hours ${minutes} minutes`
-  }
-  const days = hours / 24
-  return `${days} days ${hours} hours`
 }
 
 run()
