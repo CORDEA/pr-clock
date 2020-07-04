@@ -2430,7 +2430,9 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const core = __importStar(__webpack_require__(470));
 const github = __importStar(__webpack_require__(469));
+const commit_1 = __webpack_require__(551);
 const ignoreMinTime = 7 * 60 * 60 * 1000;
+const title = 'Elapsed time: ';
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -2442,30 +2444,75 @@ function run() {
             if (!context.payload.pull_request) {
                 return;
             }
-            const commits = yield client.pulls.listCommits({
+            const rawCommits = yield client.pulls.listCommits({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 // eslint-disable-next-line @typescript-eslint/camelcase
                 pull_number: context.issue.number
             });
-            const dates = commits.data.map(commit => new Date(commit.commit.committer.date).getTime());
+            const commits = rawCommits.data.map(commit => new commit_1.Commit(commit));
+            const waypoints = [];
             let prevDate = null;
             let totalDuration = 0;
-            for (const date of dates) {
+            let lastIndex = commits.length - 1;
+            for (let i = 0; i <= lastIndex; i++) {
+                const commit = commits[i];
+                if (i === 0 || i === lastIndex) {
+                    waypoints.push(commit);
+                }
                 if (prevDate != null) {
-                    const duration = date - prevDate;
+                    const duration = commit.createdAt.getTime() - prevDate.getTime();
                     if (duration < ignoreMinTime) {
                         totalDuration = duration;
                     }
+                    else {
+                        if (i !== 0 && i !== lastIndex) {
+                            waypoints.push(commit);
+                        }
+                    }
                 }
-                prevDate = date;
+                prevDate = commit.createdAt;
+            }
+            const issues = yield client.issues.listComments({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                // eslint-disable-next-line @typescript-eslint/camelcase
+                issue_number: context.issue.number
+            });
+            let ownIssue = null;
+            for (const issue of issues.data) {
+                if (issue.user.login !== 'github-actions') {
+                    continue;
+                }
+                if (issue.body.includes(title)) {
+                    ownIssue = issue;
+                }
+            }
+            const duration = calcRelativeDuration(totalDuration);
+            let body = `${title}${duration}\n\n`;
+            for (let i = 0; i < waypoints.length; i++) {
+                const waypoint = waypoints[i];
+                if (i !== 0) {
+                    body += ' |\n';
+                }
+                body += `\`${waypoint.sha}\` ${waypoint.createdAt}\n`;
+            }
+            if (ownIssue !== null) {
+                yield client.issues.updateComment({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    // eslint-disable-next-line @typescript-eslint/camelcase
+                    comment_id: ownIssue.id,
+                    body: body
+                });
+                return;
             }
             yield client.issues.createComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 // eslint-disable-next-line @typescript-eslint/camelcase
                 issue_number: context.issue.number,
-                body: calcRelativeDuration(totalDuration)
+                body: body
             });
         }
         catch (error) {
@@ -6594,6 +6641,23 @@ function isPlainObject(o) {
 }
 
 module.exports = isPlainObject;
+
+
+/***/ }),
+
+/***/ 551:
+/***/ (function(__unusedmodule, exports) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+class Commit {
+    constructor(commit) {
+        this.createdAt = new Date(commit.commit.committer.date);
+        this.sha = commit.sha;
+    }
+}
+exports.Commit = Commit;
 
 
 /***/ }),
