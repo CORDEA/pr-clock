@@ -68,8 +68,10 @@ async function run(): Promise<void> {
       }
       body += `\`${waypoint.sha}\` ${waypoint.createdAt}\n`
     }
+    console.log(`Body: ${body}`)
 
     if (ownIssue !== null) {
+      console.log(`Update #${ownIssue.id} issue`)
       await client.issues.updateComment({
         owner: context.repo.owner,
         repo: context.repo.repo,
@@ -79,6 +81,7 @@ async function run(): Promise<void> {
       })
       return
     }
+    console.log('Create issue')
     await client.issues.createComment({
       owner: context.repo.owner,
       repo: context.repo.repo,
