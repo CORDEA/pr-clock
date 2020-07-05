@@ -19,8 +19,8 @@ test('Body test: Seconds', () => {
     new mockedCommit()
   ])
 
-  expect(builder.build().split('\n')[0])
-    .toEqual('Elapsed time: 32 seconds')
+  expect(builder.build().split('\n')[1])
+    .toEqual('32 seconds')
 })
 
 test('Body test: Minutes', () => {
@@ -42,8 +42,8 @@ test('Body test: Minutes', () => {
     new mockedCommit()
   ])
 
-  expect(builder.build().split('\n')[0])
-    .toEqual('Elapsed time: 3 minutes 22 seconds')
+  expect(builder.build().split('\n')[1])
+    .toEqual('3 minutes 22 seconds')
 })
 
 test('Body test: Hours', () => {
@@ -65,8 +65,8 @@ test('Body test: Hours', () => {
     new mockedCommit()
   ])
 
-  expect(builder.build().split('\n')[0])
-    .toEqual('Elapsed time: 1 hours 2 minutes')
+  expect(builder.build().split('\n')[1])
+    .toEqual('1 hours 2 minutes')
 })
 
 test('Body test: 1', () => {
@@ -96,9 +96,9 @@ test('Body test: 1', () => {
   ])
 
   const body = builder.build()
-  expect(body.split('\n')[0])
-    .toEqual('Elapsed time: 2 hours')
-  expect(body.match(/\|/g) || [])
+  expect(body.split('\n')[1])
+    .toEqual('2 hours')
+  expect(body.match(/arrow/g) || [])
     .toHaveLength(1)
 })
 
@@ -136,9 +136,9 @@ test('Body test: 2', () => {
   ])
 
   const body = builder.build()
-  expect(body.split('\n')[0])
-    .toEqual('Elapsed time: 4 hours')
-  expect(body.match(/\|/g) || [])
+  expect(body.split('\n')[1])
+    .toEqual('4 hours')
+  expect(body.match(/arrow/g) || [])
     .toHaveLength(3)
 })
 
@@ -204,8 +204,8 @@ test('Body test: 3', () => {
   ])
 
   const body = builder.build()
-  expect(body.split('\n')[0])
-    .toEqual('Elapsed time: 7 hours')
-  expect(body.match(/\|/g) || [])
+  expect(body.split('\n')[1])
+    .toEqual('7 hours')
+  expect(body.match(/arrow/g) || [])
     .toHaveLength(5)
 })
