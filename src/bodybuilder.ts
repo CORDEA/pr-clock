@@ -19,7 +19,7 @@ export class BodyBuilder {
     const waypoints = []
     let prevCommit = null
     let totalDuration = 0
-    let lastIndex = this.commits.length - 1
+    const lastIndex = this.commits.length - 1
     for (let i = 0; i <= lastIndex; i++) {
       const commit = this.commits[i]
       if (prevCommit != null) {
