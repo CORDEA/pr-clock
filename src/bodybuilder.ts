@@ -16,25 +16,28 @@ export class BodyBuilder {
 
   build(): string {
     const waypoints = []
-    let prevDate = null
+    let prevCommit = null
     let totalDuration = 0
     let lastIndex = this.commits.length - 1
     for (let i = 0; i <= lastIndex; i++) {
       const commit = this.commits[i]
-      if (i === 0 || i === lastIndex) {
-        waypoints.push(commit)
-      }
-      if (prevDate != null) {
-        const duration = commit.createdAt.getTime() - prevDate.getTime()
+      if (prevCommit != null) {
+        const duration =
+          commit.createdAt.getTime() - prevCommit.createdAt.getTime()
         if (duration < ignoreMinTime) {
-          totalDuration = duration
-        } else {
-          if (i !== 0 && i !== lastIndex) {
+          totalDuration += duration
+          if (i === 1) {
+            waypoints.push(prevCommit)
+          }
+          if (i === lastIndex) {
             waypoints.push(commit)
           }
+        } else {
+          waypoints.push(prevCommit)
+          waypoints.push(commit)
         }
       }
-      prevDate = commit.createdAt
+      prevCommit = commit
     }
 
     const duration = BodyBuilder.calcRelativeDuration(totalDuration)
