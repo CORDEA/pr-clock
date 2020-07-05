@@ -47,7 +47,7 @@ async function run(): Promise<void> {
         repo: context.repo.repo,
         // eslint-disable-next-line @typescript-eslint/camelcase
         comment_id: ownIssue.id,
-        body: body
+        body
       })
       return
     }
@@ -57,7 +57,7 @@ async function run(): Promise<void> {
       repo: context.repo.repo,
       // eslint-disable-next-line @typescript-eslint/camelcase
       issue_number: context.issue.number,
-      body: body
+      body
     })
   } catch (error) {
     core.setFailed(error.message)
