@@ -2431,8 +2431,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const core = __importStar(__webpack_require__(470));
 const github = __importStar(__webpack_require__(469));
 const commit_1 = __webpack_require__(551);
-const ignoreMinTime = 7 * 60 * 60 * 1000;
-const title = 'Elapsed time: ';
+const bodybuilder_1 = __webpack_require__(588);
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -2451,28 +2450,7 @@ function run() {
                 pull_number: context.issue.number
             });
             const commits = rawCommits.data.map(commit => new commit_1.Commit(commit));
-            const waypoints = [];
-            let prevDate = null;
-            let totalDuration = 0;
-            let lastIndex = commits.length - 1;
-            for (let i = 0; i <= lastIndex; i++) {
-                const commit = commits[i];
-                if (i === 0 || i === lastIndex) {
-                    waypoints.push(commit);
-                }
-                if (prevDate != null) {
-                    const duration = commit.createdAt.getTime() - prevDate.getTime();
-                    if (duration < ignoreMinTime) {
-                        totalDuration = duration;
-                    }
-                    else {
-                        if (i !== 0 && i !== lastIndex) {
-                            waypoints.push(commit);
-                        }
-                    }
-                }
-                prevDate = commit.createdAt;
-            }
+            const builder = new bodybuilder_1.BodyBuilder(commits);
             const issues = yield client.issues.listComments({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
@@ -2484,20 +2462,14 @@ function run() {
                 if (issue.user.login !== 'github-actions') {
                     continue;
                 }
-                if (issue.body.includes(title)) {
+                if (builder.isBody(issue.body)) {
                     ownIssue = issue;
                 }
             }
-            const duration = calcRelativeDuration(totalDuration);
-            let body = `${title}${duration}\n\n`;
-            for (let i = 0; i < waypoints.length; i++) {
-                const waypoint = waypoints[i];
-                if (i !== 0) {
-                    body += ' |\n';
-                }
-                body += `\`${waypoint.sha}\` ${waypoint.createdAt}\n`;
-            }
+            const body = builder.build();
+            console.log(`Body: ${body}`);
             if (ownIssue !== null) {
+                console.log(`Update #${ownIssue.id} issue`);
                 yield client.issues.updateComment({
                     owner: context.repo.owner,
                     repo: context.repo.repo,
@@ -2507,6 +2479,7 @@ function run() {
                 });
                 return;
             }
+            console.log('Create issue');
             yield client.issues.createComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
@@ -2519,22 +2492,6 @@ function run() {
             core.setFailed(error.message);
         }
     });
-}
-function calcRelativeDuration(duration) {
-    const seconds = duration / 1000;
-    if (seconds < 60) {
-        return `${seconds} seconds`;
-    }
-    const minutes = seconds / 60;
-    if (minutes < 60) {
-        return `${minutes} minutes ${seconds} seconds`;
-    }
-    const hours = minutes / 60;
-    if (hours < 24) {
-        return `${hours} hours ${minutes} minutes`;
-    }
-    const days = hours / 24;
-    return `${days} days ${hours} hours`;
 }
 run();
 
@@ -6795,6 +6752,116 @@ module.exports = parse;
 
 /***/ }),
 
+/***/ 588:
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
+
+"use strict";
+
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const waypoint_1 = __importDefault(__webpack_require__(853));
+const ignoreMinTime = 7 * 60 * 60 * 1000;
+const title = '### Elapsed time';
+class BodyBuilder {
+    constructor(commits) {
+        this.commits = commits;
+    }
+    isBody(string) {
+        return string.includes(title);
+    }
+    build() {
+        const waypoints = [];
+        let prevCommit = null;
+        let totalDuration = 0;
+        let lastIndex = this.commits.length - 1;
+        for (let i = 0; i <= lastIndex; i++) {
+            const commit = this.commits[i];
+            if (prevCommit != null) {
+                const duration = commit.createdAt.getTime() - prevCommit.createdAt.getTime();
+                const ignore = duration >= ignoreMinTime;
+                if (!ignore) {
+                    totalDuration += duration;
+                }
+                if (i === 1) {
+                    waypoints.push(new waypoint_1.default(prevCommit, duration, false));
+                }
+                else {
+                    if (ignore) {
+                        waypoints.push(new waypoint_1.default(prevCommit, duration, false));
+                    }
+                }
+                if (i === lastIndex) {
+                    waypoints.push(new waypoint_1.default(commit, duration, ignore));
+                }
+                else {
+                    if (ignore) {
+                        waypoints.push(new waypoint_1.default(commit, duration, true));
+                    }
+                }
+            }
+            prevCommit = commit;
+        }
+        const formattedTotalDuration = BodyBuilder.calcRelativeDuration(totalDuration);
+        let body = `${title}\n${formattedTotalDuration}\n\n###Timeline\n`;
+        for (let i = 0; i < waypoints.length; i++) {
+            const waypoint = waypoints[i];
+            if (i !== 0) {
+                if (waypoint.restEnd) {
+                    const formattedDuration = BodyBuilder.calcRelativeDuration(waypoint.duration);
+                    body += '&nbsp;&nbsp;:arrow_double_down:&nbsp;&nbsp;' +
+                        `${formattedDuration} (Ignored from total duration)`;
+                }
+                else {
+                    body += '&nbsp;&nbsp;:arrow_down_small:';
+                }
+                body += '\n';
+            }
+            body += `${waypoint.commit.sha} at ` +
+                `${BodyBuilder.formatDate(waypoint.commit.createdAt)}\n`;
+        }
+        return body;
+    }
+    static calcRelativeDuration(duration) {
+        const seconds = Math.floor(duration / 1000);
+        if (seconds < 60) {
+            return `${seconds} seconds`;
+        }
+        const minutes = Math.floor(seconds / 60);
+        if (minutes < 60) {
+            const diff = seconds % 60;
+            if (diff > 0) {
+                return `${minutes} minutes ${diff} seconds`;
+            }
+            return `${minutes} minutes`;
+        }
+        const hours = Math.floor(minutes / 60);
+        if (hours < 24) {
+            const diff = minutes % 60;
+            if (diff > 0) {
+                return `${hours} hours ${diff} minutes`;
+            }
+            return `${hours} hours`;
+        }
+        const days = Math.floor(hours / 24);
+        const diff = hours % 24;
+        if (diff > 0) {
+            return `${days} days ${diff} hours`;
+        }
+        return `${days} days`;
+    }
+    static formatDate(date) {
+        return `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}, ` +
+            `${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}:` +
+            `${date.getSeconds().toString().padStart(2, '0')}`;
+    }
+}
+exports.BodyBuilder = BodyBuilder;
+
+
+/***/ }),
+
 /***/ 605:
 /***/ (function(module) {
 
@@ -8813,6 +8880,24 @@ restEndpointMethods.VERSION = VERSION;
 
 exports.restEndpointMethods = restEndpointMethods;
 //# sourceMappingURL=index.js.map
+
+
+/***/ }),
+
+/***/ 853:
+/***/ (function(__unusedmodule, exports) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+class Waypoint {
+    constructor(commit, duration, restEnd) {
+        this.commit = commit;
+        this.duration = duration;
+        this.restEnd = restEnd;
+    }
+}
+exports.default = Waypoint;
 
 
 /***/ }),
