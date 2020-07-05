@@ -1,4 +1,5 @@
 import {Commit} from './commit'
+import Waypoint from './waypoint'
 
 const ignoreMinTime = 7 * 60 * 60 * 1000
 const title = 'Elapsed time: '
@@ -24,30 +25,43 @@ export class BodyBuilder {
       if (prevCommit != null) {
         const duration =
           commit.createdAt.getTime() - prevCommit.createdAt.getTime()
-        if (duration < ignoreMinTime) {
+        const ignore = duration < ignoreMinTime
+        if (!ignore) {
           totalDuration += duration
-          if (i === 1) {
-            waypoints.push(prevCommit)
-          }
-          if (i === lastIndex) {
-            waypoints.push(commit)
-          }
+        }
+        if (i === 1) {
+          waypoints.push(new Waypoint(prevCommit, duration, 'Start'))
         } else {
-          waypoints.push(prevCommit)
-          waypoints.push(commit)
+          if (ignore) {
+            waypoints.push(new Waypoint(prevCommit, duration, 'Middle'))
+          }
+        }
+        if (i === lastIndex) {
+          waypoints.push(new Waypoint(commit, duration, 'End'))
+        } else {
+          if (ignore) {
+            waypoints.push(new Waypoint(commit, duration, 'Middle'))
+          }
         }
       }
       prevCommit = commit
     }
 
-    const duration = BodyBuilder.calcRelativeDuration(totalDuration)
-    let body = `${title}${duration}\n\n`
+    const formattedTotalDuration =
+      BodyBuilder.calcRelativeDuration(totalDuration)
+    let body = `${title}${formattedTotalDuration}\n\n`
     for (let i = 0; i < waypoints.length; i++) {
       const waypoint = waypoints[i]
       if (i !== 0) {
-        body += ' |\n'
+        if (waypoint.type === 'Middle') {
+          const formattedDuration =
+            BodyBuilder.calcRelativeDuration(waypoint.duration)
+          body += ` | ${formattedDuration} (Ignored from total duration)`
+        } else {
+          body += ' |'
+        }
       }
-      body += `\`${waypoint.sha}\` ${waypoint.createdAt}\n`
+      body += `\`${waypoint.commit.sha}\` ${waypoint.commit.createdAt}\n`
     }
     return body
   }
