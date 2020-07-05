@@ -71,7 +71,8 @@ export class BodyBuilder {
         }
         body += '\n'
       }
-      body += `${waypoint.commit.sha} ${waypoint.commit.createdAt}\n`
+      body += `${waypoint.commit.sha} at ` +
+        `${BodyBuilder.formatDate(waypoint.commit.createdAt)}\n`
     }
     return body
   }
@@ -103,5 +104,11 @@ export class BodyBuilder {
       return `${days} days ${diff} hours`
     }
     return `${days} days`
+  }
+
+  private static formatDate(date: Date): string {
+    return `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}, ` +
+      `${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}:` +
+      `${date.getSeconds().toString().padStart(2, '0')}`
   }
 }
