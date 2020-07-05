@@ -2,7 +2,7 @@ import {Commit} from './commit'
 import Waypoint from './waypoint'
 
 const ignoreMinTime = 7 * 60 * 60 * 1000
-const title = 'Elapsed time: '
+const title = '### Elapsed time'
 
 export class BodyBuilder {
   private readonly commits: Commit[]
@@ -57,20 +57,21 @@ export class BodyBuilder {
 
     const formattedTotalDuration =
       BodyBuilder.calcRelativeDuration(totalDuration)
-    let body = `${title}${formattedTotalDuration}\n\n`
+    let body = `${title}\n${formattedTotalDuration}\n\n###Timeline\n`
     for (let i = 0; i < waypoints.length; i++) {
       const waypoint = waypoints[i]
       if (i !== 0) {
         if (waypoint.restEnd) {
           const formattedDuration =
             BodyBuilder.calcRelativeDuration(waypoint.duration)
-          body += ` | ${formattedDuration} (Ignored from total duration)`
+          body += '&nbsp;&nbsp;:arrow_double_down:&nbsp;&nbsp;' +
+            `${formattedDuration} (Ignored from total duration)`
         } else {
-          body += ' |'
+          body += '&nbsp;&nbsp;:arrow_down_small:'
         }
         body += '\n'
       }
-      body += `\`${waypoint.commit.sha}\` ${waypoint.commit.createdAt}\n`
+      body += `${waypoint.commit.sha} ${waypoint.commit.createdAt}\n`
     }
     return body
   }
