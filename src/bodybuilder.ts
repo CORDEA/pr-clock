@@ -25,22 +25,30 @@ export class BodyBuilder {
       if (prevCommit != null) {
         const duration =
           commit.createdAt.getTime() - prevCommit.createdAt.getTime()
-        const ignore = duration < ignoreMinTime
+        const ignore = duration >= ignoreMinTime
         if (!ignore) {
           totalDuration += duration
         }
         if (i === 1) {
-          waypoints.push(new Waypoint(prevCommit, duration, 'Start'))
+          waypoints.push(
+            new Waypoint(prevCommit, duration, false)
+          )
         } else {
           if (ignore) {
-            waypoints.push(new Waypoint(prevCommit, duration, 'Middle'))
+            waypoints.push(
+              new Waypoint(prevCommit, duration, false)
+            )
           }
         }
         if (i === lastIndex) {
-          waypoints.push(new Waypoint(commit, duration, 'End'))
+          waypoints.push(
+            new Waypoint(commit, duration, ignore)
+          )
         } else {
           if (ignore) {
-            waypoints.push(new Waypoint(commit, duration, 'Middle'))
+            waypoints.push(
+              new Waypoint(commit, duration, true)
+            )
           }
         }
       }
@@ -53,13 +61,14 @@ export class BodyBuilder {
     for (let i = 0; i < waypoints.length; i++) {
       const waypoint = waypoints[i]
       if (i !== 0) {
-        if (waypoint.type === 'Middle') {
+        if (waypoint.restEnd) {
           const formattedDuration =
             BodyBuilder.calcRelativeDuration(waypoint.duration)
           body += ` | ${formattedDuration} (Ignored from total duration)`
         } else {
           body += ' |'
         }
+        body += '\n'
       }
       body += `\`${waypoint.commit.sha}\` ${waypoint.commit.createdAt}\n`
     }

@@ -1,16 +1,18 @@
 import {Commit} from './commit'
 
-type WaypointType = 'Start' | 'Middle' | 'End'
-
 class Waypoint {
   commit: Commit
   duration: number
-  type: WaypointType
+  restEnd: boolean
 
-  constructor(commit: Commit, duration: number, type: WaypointType) {
+  constructor(
+    commit: Commit,
+    duration: number,
+    restEnd: boolean
+  ) {
     this.commit = commit
-    this.type = type
     this.duration = duration
+    this.restEnd = restEnd
   }
 }
 
