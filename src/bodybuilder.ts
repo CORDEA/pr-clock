@@ -50,19 +50,31 @@ export class BodyBuilder {
   }
 
   private static calcRelativeDuration(duration: number): string {
-    const seconds = duration / 1000
+    const seconds = Math.floor(duration / 1000)
     if (seconds < 60) {
       return `${seconds} seconds`
     }
-    const minutes = seconds / 60
+    const minutes = Math.floor(seconds / 60)
     if (minutes < 60) {
-      return `${minutes} minutes ${seconds} seconds`
+      const diff = seconds % 60
+      if (diff > 0) {
+        return `${minutes} minutes ${diff} seconds`
+      }
+      return `${minutes} minutes`
     }
-    const hours = minutes / 60
+    const hours = Math.floor(minutes / 60)
     if (hours < 24) {
-      return `${hours} hours ${minutes} minutes`
+      const diff = minutes % 60
+      if (diff > 0) {
+        return `${hours} hours ${diff} minutes`
+      }
+      return `${hours} hours`
     }
-    const days = hours / 24
-    return `${days} days ${hours} hours`
+    const days = Math.floor(hours / 24)
+    const diff = hours % 24
+    if (diff > 0) {
+      return `${days} days ${diff} hours`
+    }
+    return `${days} days`
   }
 }
