@@ -7,7 +7,9 @@ async function run(): Promise<void> {
   try {
     const client = github.getOctokit(core.getInput('github-token'))
     const context = github.context
-    if (context.payload.action !== 'opened') {
+    const action = context.payload.action
+    if (action !== 'opened' && action !== 'edited') {
+      core.debug(`This is unsupported action: ${action}`)
       return
     }
     if (!context.payload.pull_request) {
