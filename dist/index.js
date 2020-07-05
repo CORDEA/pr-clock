@@ -2437,12 +2437,16 @@ function run() {
         try {
             const client = github.getOctokit(core.getInput('github-token'));
             const context = github.context;
-            if (context.payload.action !== 'opened') {
+            const action = context.payload.action;
+            if (action !== 'opened' && action !== 'edited') {
+                core.debug(`This is unsupported action: ${action}`);
                 return;
             }
             if (!context.payload.pull_request) {
+                core.debug('This is not PR');
                 return;
             }
+            core.debug('Starting...');
             const rawCommits = yield client.pulls.listCommits({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
@@ -2451,41 +2455,42 @@ function run() {
             });
             const commits = rawCommits.data.map(commit => new commit_1.Commit(commit));
             const builder = new bodybuilder_1.BodyBuilder(commits);
-            const issues = yield client.issues.listComments({
+            const comments = yield client.issues.listComments({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 // eslint-disable-next-line @typescript-eslint/camelcase
                 issue_number: context.issue.number
             });
-            let ownIssue = null;
-            for (const issue of issues.data) {
-                if (issue.user.login !== 'github-actions') {
+            core.debug(`Number of comments: ${comments.data.length}`);
+            let ownComment = null;
+            for (const comment of comments.data) {
+                if (comment.user.login !== 'github-actions') {
                     continue;
                 }
-                if (builder.isBody(issue.body)) {
-                    ownIssue = issue;
+                if (builder.isBody(comment.body)) {
+                    ownComment = comment;
                 }
             }
             const body = builder.build();
-            console.log(`Body: ${body}`);
-            if (ownIssue !== null) {
-                console.log(`Update #${ownIssue.id} issue`);
+            core.debug(`Body: ${body}`);
+            if (ownComment !== null) {
+                core.debug(`Update comment`);
                 yield client.issues.updateComment({
                     owner: context.repo.owner,
                     repo: context.repo.repo,
                     // eslint-disable-next-line @typescript-eslint/camelcase
-                    comment_id: ownIssue.id,
-                    body: body
+                    comment_id: ownComment.id,
+                    body
                 });
                 return;
             }
-            console.log('Create issue');
+            core.debug('Create comment');
             yield client.issues.createComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 // eslint-disable-next-line @typescript-eslint/camelcase
                 issue_number: context.issue.number,
-                body: body
+                body
             });
         }
         catch (error) {
@@ -6775,7 +6780,7 @@ class BodyBuilder {
         const waypoints = [];
         let prevCommit = null;
         let totalDuration = 0;
-        let lastIndex = this.commits.length - 1;
+        const lastIndex = this.commits.length - 1;
         for (let i = 0; i <= lastIndex; i++) {
             const commit = this.commits[i];
             if (prevCommit != null) {
