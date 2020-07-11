@@ -57,7 +57,7 @@ export class BodyBuilder {
 
     const formattedTotalDuration =
       BodyBuilder.calcRelativeDuration(totalDuration)
-    let body = `${title}\n${formattedTotalDuration}\n\n###Timeline\n`
+    let body = `${title}\n${formattedTotalDuration}\n\n### Timeline\n`
     for (let i = 0; i < waypoints.length; i++) {
       const waypoint = waypoints[i]
       if (i !== 0) {
