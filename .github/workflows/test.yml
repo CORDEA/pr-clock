@@ -6,6 +6,9 @@ on: # rebuild any PRs and main branch changes
       - master
       - 'releases/*'
 
+permissions:
+  pull-requests: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
