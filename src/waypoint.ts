@@ -5,11 +5,7 @@ class Waypoint {
   duration: number
   restEnd: boolean
 
-  constructor(
-    commit: Commit,
-    duration: number,
-    restEnd: boolean
-  ) {
+  constructor(commit: Commit, duration: number, restEnd: boolean) {
     this.commit = commit
     this.duration = duration
     this.restEnd = restEnd

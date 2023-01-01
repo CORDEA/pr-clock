@@ -1,7 +1,8 @@
 import {BodyBuilder} from '../src/bodybuilder'
 
 test('Body test: Seconds', () => {
-  const mockedCommit = jest.fn()
+  const mockedCommit = jest
+    .fn()
     .mockImplementationOnce(() => {
       return {
         createdAt: new Date('2020-01-01T01:00:02Z'),
@@ -14,17 +15,14 @@ test('Body test: Seconds', () => {
         sha: 'sha2'
       }
     })
-  const builder = new BodyBuilder([
-    new mockedCommit(),
-    new mockedCommit()
-  ])
+  const builder = new BodyBuilder([new mockedCommit(), new mockedCommit()])
 
-  expect(builder.build().split('\n')[1])
-    .toEqual('32 seconds')
+  expect(builder.build().split('\n')[1]).toEqual('32 seconds')
 })
 
 test('Body test: Minutes', () => {
-  const mockedCommit = jest.fn()
+  const mockedCommit = jest
+    .fn()
     .mockImplementationOnce(() => {
       return {
         createdAt: new Date('2020-01-01T01:01:02Z'),
@@ -37,17 +35,14 @@ test('Body test: Minutes', () => {
         sha: 'sha2'
       }
     })
-  const builder = new BodyBuilder([
-    new mockedCommit(),
-    new mockedCommit()
-  ])
+  const builder = new BodyBuilder([new mockedCommit(), new mockedCommit()])
 
-  expect(builder.build().split('\n')[1])
-    .toEqual('3 minutes 22 seconds')
+  expect(builder.build().split('\n')[1]).toEqual('3 minutes 22 seconds')
 })
 
 test('Body test: Hours', () => {
-  const mockedCommit = jest.fn()
+  const mockedCommit = jest
+    .fn()
     .mockImplementationOnce(() => {
       return {
         createdAt: new Date('2020-01-01T01:00:02Z'),
@@ -60,17 +55,14 @@ test('Body test: Hours', () => {
         sha: 'sha2'
       }
     })
-  const builder = new BodyBuilder([
-    new mockedCommit(),
-    new mockedCommit()
-  ])
+  const builder = new BodyBuilder([new mockedCommit(), new mockedCommit()])
 
-  expect(builder.build().split('\n')[1])
-    .toEqual('1 hours 2 minutes')
+  expect(builder.build().split('\n')[1]).toEqual('1 hours 2 minutes')
 })
 
 test('Body test: 1', () => {
-  const mockedCommit = jest.fn()
+  const mockedCommit = jest
+    .fn()
     .mockImplementationOnce(() => {
       return {
         createdAt: new Date('2020-01-01T10:00:00Z'),
@@ -96,14 +88,13 @@ test('Body test: 1', () => {
   ])
 
   const body = builder.build()
-  expect(body.split('\n')[1])
-    .toEqual('2 hours')
-  expect(body.match(/arrow/g) || [])
-    .toHaveLength(1)
+  expect(body.split('\n')[1]).toEqual('2 hours')
+  expect(body.match(/arrow/g) || []).toHaveLength(1)
 })
 
 test('Body test: 2', () => {
-  const mockedCommit = jest.fn()
+  const mockedCommit = jest
+    .fn()
     .mockImplementationOnce(() => {
       return {
         createdAt: new Date('2020-01-01T00:00:00Z'),
@@ -136,14 +127,13 @@ test('Body test: 2', () => {
   ])
 
   const body = builder.build()
-  expect(body.split('\n')[1])
-    .toEqual('4 hours')
-  expect(body.match(/arrow/g) || [])
-    .toHaveLength(3)
+  expect(body.split('\n')[1]).toEqual('4 hours')
+  expect(body.match(/arrow/g) || []).toHaveLength(3)
 })
 
 test('Body test: 3', () => {
-  const mockedCommit = jest.fn()
+  const mockedCommit = jest
+    .fn()
     .mockImplementationOnce(() => {
       return {
         createdAt: new Date('2020-01-01T00:00:00Z'),
@@ -204,8 +194,6 @@ test('Body test: 3', () => {
   ])
 
   const body = builder.build()
-  expect(body.split('\n')[1])
-    .toEqual('7 hours')
-  expect(body.match(/arrow/g) || [])
-    .toHaveLength(5)
+  expect(body.split('\n')[1]).toEqual('7 hours')
+  expect(body.match(/arrow/g) || []).toHaveLength(5)
 })

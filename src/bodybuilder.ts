@@ -30,48 +30,44 @@ export class BodyBuilder {
           totalDuration += duration
         }
         if (i === 1) {
-          waypoints.push(
-            new Waypoint(prevCommit, duration, false)
-          )
+          waypoints.push(new Waypoint(prevCommit, duration, false))
         } else {
           if (ignore) {
-            waypoints.push(
-              new Waypoint(prevCommit, duration, false)
-            )
+            waypoints.push(new Waypoint(prevCommit, duration, false))
           }
         }
         if (i === lastIndex) {
-          waypoints.push(
-            new Waypoint(commit, duration, ignore)
-          )
+          waypoints.push(new Waypoint(commit, duration, ignore))
         } else {
           if (ignore) {
-            waypoints.push(
-              new Waypoint(commit, duration, true)
-            )
+            waypoints.push(new Waypoint(commit, duration, true))
           }
         }
       }
       prevCommit = commit
     }
 
-    const formattedTotalDuration =
-      BodyBuilder.calcRelativeDuration(totalDuration)
+    const formattedTotalDuration = BodyBuilder.calcRelativeDuration(
+      totalDuration
+    )
     let body = `${title}\n${formattedTotalDuration}\n\n### Timeline\n`
     for (let i = 0; i < waypoints.length; i++) {
       const waypoint = waypoints[i]
       if (i !== 0) {
         if (waypoint.restEnd) {
-          const formattedDuration =
-            BodyBuilder.calcRelativeDuration(waypoint.duration)
-          body += '&nbsp;&nbsp;:arrow_double_down:&nbsp;&nbsp;' +
+          const formattedDuration = BodyBuilder.calcRelativeDuration(
+            waypoint.duration
+          )
+          body +=
+            '&nbsp;&nbsp;:arrow_double_down:&nbsp;&nbsp;' +
             `${formattedDuration} (Ignored from total duration)`
         } else {
           body += '&nbsp;&nbsp;:arrow_down_small:'
         }
         body += '\n'
       }
-      body += `${waypoint.commit.sha} at ` +
+      body +=
+        `${waypoint.commit.sha} at ` +
         `${BodyBuilder.formatDate(waypoint.commit.createdAt)}\n`
     }
     return body
@@ -107,8 +103,16 @@ export class BodyBuilder {
   }
 
   private static formatDate(date: Date): string {
-    return `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}, ` +
-      `${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}:` +
-      `${date.getSeconds().toString().padStart(2, '0')}`
+    return (
+      `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}, ` +
+      `${date.getHours()}:${date
+        .getMinutes()
+        .toString()
+        .padStart(2, '0')}:` +
+      `${date
+        .getSeconds()
+        .toString()
+        .padStart(2, '0')}`
+    )
   }
 }
