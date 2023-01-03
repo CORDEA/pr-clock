@@ -1,6 +1,6 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
-import {Commit} from './commit'
+import {Commit, CommitResponse} from './commit'
 import {BodyBuilder} from './bodybuilder'
 
 async function run(): Promise<void> {
@@ -21,7 +21,9 @@ async function run(): Promise<void> {
     repo: context.repo.repo,
     pull_number: context.issue.number
   })
-  const commits = rawCommits.data.map((commit: any) => new Commit(commit))
+  const commits = rawCommits.data.map(
+    (commit: CommitResponse) => new Commit(commit)
+  )
   const builder = new BodyBuilder(commits)
   let comments = null
   try {
